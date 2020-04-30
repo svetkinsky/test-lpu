@@ -8,8 +8,7 @@ Xhr.sendRequest('GET', requestUrl)
     .then(data => run(data))
     .catch(err => console.log(err))
 
-
-
+let maxId = 0
 
 //функция запуска программы
 const run = responseData => {
@@ -19,9 +18,9 @@ const run = responseData => {
     const content = responseData.content || []
     const tableBody = document.querySelector('#table-body')
 
-    let maxId = 0
 
-    localStorage.clear()
+
+    // localStorage.clear()
     content.forEach(item => {
         localStorage.setItem(`lpu${item.id}`, JSON.stringify(item))
     })
@@ -33,13 +32,15 @@ const run = responseData => {
         if(!localStorage.hasOwnProperty(key)) {
             continue
         }
+        if(key.indexOf('lpu') === -1) {
+            continue
+        }
 
-        // console.log(key)
-            const lpu = JSON.parse(localStorage.getItem(key))
-            if (lpu.id > maxId) {
-                maxId = lpu.id
-            }
-            tableBody.append(Lpu.create(lpu.id, lpu.name, lpu.address, lpu.phone))
+        const lpu = JSON.parse(localStorage.getItem(key))
+        if (lpu.id > maxId) {
+            maxId = lpu.id
+        }
+        tableBody.append(Lpu.create(lpu.id, lpu.name, lpu.address, lpu.phone))
 
     }
 
@@ -67,20 +68,50 @@ const run = responseData => {
                     const key = cellEdit.getAttribute('data-type')
                     const lpuEdit = cellEdit.parentElement
 
-                    console.log(lpuEdit)
-                    console.log(lpuEdit.getAttribute('lpu-id'))
+                    console.log(lpuEdit.firstChild.nextSibling.innerHTML)
+                    const body = {
+                        id: lpuEdit.getAttribute('lpu-id'),
+                        name: lpuEdit.firstChild.innerHTML,
+                        address: lpuEdit.firstChild.nextSibling.innerHTML,
+                        phone: lpuEdit.lastChild.innerHTML
+                    }
+
+
 
                     console.log(localStorage.getItem(`lpu${lpuEdit.getAttribute('lpu-id')}`))
-                    // console.log(key)
-                    // const body = {}
-                    // body
-                    // body[key] = cellEdit.innerHTML
-                    //
-                    // console.log(body)
                     //"запрос" на изменение данных
+                    localStorage.removeItem(`lpu${lpuEdit.getAttribute('lpu-id')}`)
+                    localStorage.setItem(`lpu${lpuEdit.getAttribute('lpu-id')}`, JSON.stringify(body))
 
                 })
             })
+        })
+
+    }
+
+    const removeLpu = row => {
+        row.addEventListener('contextmenu', event => {
+            event.preventDefault()
+            const removeButton = document.createElement('a')
+            removeButton.classList.add('waves-effect', 'waves-light', 'btn')
+            removeButton.innerHTML = 'Удалить'
+
+            row.style.position = 'relative'
+            removeButton.style.position = 'absolute'
+            removeButton.style.left = event.layerX + 'px'
+            row.append(removeButton)
+
+            removeButton.addEventListener('click', () => {
+                console.log('CLICK')
+                localStorage.removeItem(`lpu${row.getAttribute('lpu-id')}`)
+                row.remove()
+                removeButton.style.display = 'none'
+            })
+
+            removeButton.addEventListener('mouseout', () => {
+                removeButton.style.display = 'none'
+            })
+
         })
     }
 
@@ -88,10 +119,19 @@ const run = responseData => {
 
     //добавление нового элемента
     addButton.addEventListener('click', () => {
-        const newLpu = Lpu.create(++maxId)
+        const newLpu = Lpu.create(maxId++)
         tableBody.append(newLpu)
 
         editRow(newLpu)
+        removeLpu(newLpu)
+
+        const newLpuObject = {
+            id: maxId++,
+            name: '',
+            address: '',
+            phone: ''
+        }
+        localStorage.setItem(`lpu${newLpuObject.id}`, JSON.stringify(newLpuObject))
     })
 
     const allRows = document.querySelectorAll('tr')
@@ -100,11 +140,16 @@ const run = responseData => {
 
     allRows.forEach(row => {
         editRow(row)
+        removeLpu(row)
     })
 
 
 
+
+
 }
+
+
 
 
 
