@@ -8,12 +8,13 @@ Xhr.sendRequest('GET', requestUrl)
     .then(data => run(data))
     .catch(err => console.log(err))
 
-let maxId = 0
+
 
 //функция запуска программы
 const run = responseData => {
     console.log(responseData)
 
+    let maxId = 0
     //массив данных по ЛПУ
     const content = responseData.content || []
     const tableBody = document.querySelector('#table-body')
@@ -21,9 +22,9 @@ const run = responseData => {
 
 
     // localStorage.clear()
-    content.forEach(item => {
-        localStorage.setItem(`lpu${item.id}`, JSON.stringify(item))
-    })
+    // content.forEach(item => {
+    //     localStorage.setItem(`lpu${item.id}`, JSON.stringify(item))
+    // })
 
 
 
@@ -37,6 +38,8 @@ const run = responseData => {
         }
 
         const lpu = JSON.parse(localStorage.getItem(key))
+        console.log('lpu from localstorage', lpu)
+
         if (lpu.id > maxId) {
             maxId = lpu.id
         }
